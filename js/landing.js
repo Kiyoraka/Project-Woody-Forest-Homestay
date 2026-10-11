@@ -178,6 +178,158 @@
       .join("");
   }
 
+  /* ------------------------------------------------- availability calendar
+     Week starts Monday. Free days are clickable: each click dispatches
+     "calendar:pick" (detail.date) on document; the booking form owns the
+     check-in / check-out logic and calls calendar.setRange() to highlight. */
+  const calendar = (() => {
+    const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const MAX_MONTHS_AHEAD = 12;
+    let view = null;
+    let range = { from: null, to: null };
+    let root;
+
+    function monthStart(y, m) {
+      return new Date(y, m, 1);
+    }
+
+    function canGo(delta) {
+      const now = new Date();
+      const target = new Date(view.y, view.m + delta, 1);
+      const first = new Date(now.getFullYear(), now.getMonth(), 1);
+      const last = new Date(now.getFullYear(), now.getMonth() + MAX_MONTHS_AHEAD, 1);
+      return target >= first && target <= last;
+    }
+
+    function render() {
+      const s = Store.getSettings();
+      const today = UI.todayISO();
+      const taken = Store.unavailableNights();
+      const blocked = Store.blockedNights();
+      const first = monthStart(view.y, view.m);
+      const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+      const lead = (first.getDay() + 6) % 7; // Monday-first offset
+
+      let cells = "";
+      for (let i = 0; i < lead; i++) cells += '<span class="day day--empty"></span>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const iso = UI.toISO(new Date(view.y, view.m, d));
+        const info = Store.nightPrice(iso, s.pricing);
+        const classes = ["day"];
+        let clickable = false;
+        if (iso < today) classes.push("day--past");
+        else if (blocked.has(iso)) classes.push("day--blocked");
+        else if (taken.has(iso)) classes.push("day--booked");
+        else {
+          classes.push("day--free");
+          clickable = true;
+          if (info.kind === "peak") classes.push("day--peak");
+          else if (info.kind === "weekend") classes.push("day--weekend");
+        }
+        if (iso === today) classes.push("day--today");
+        if (range.from && range.to && iso >= range.from && iso < range.to) classes.push("day--in-range");
+        if (iso === range.from || (range.to && iso === UI.addDays(range.to, -1))) classes.push("day--selected");
+        const price = clickable ? `<small>${UI.fmtRM(info.price).replace("RM ", "")}</small>` : "";
+        const title = clickable ? `${UI.fmtDate(iso)} - ${UI.fmtRM(info.price)} per night` : "";
+        cells += `<${clickable ? "button" : "span"} class="${classes.join(" ")}" data-date="${iso}" ${title ? `title="${esc(title)}"` : ""}>${d}${price}</${clickable ? "button" : "span"}>`;
+      }
+
+      root.innerHTML = `
+        <div class="calendar__head">
+          <div class="calendar__title">${UI.monthLabel(view.y, view.m)}</div>
+          <div class="calendar__nav">
+            <button class="btn btn--icon" data-cal="-1" aria-label="Previous month" ${canGo(-1) ? "" : "disabled"}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 5-7 7 7 7"/></svg>
+            </button>
+            <button class="btn btn--icon" data-cal="1" aria-label="Next month" ${canGo(1) ? "" : "disabled"}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m9 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="calendar__weekdays">${WEEKDAYS.map((w) => `<span>${w}</span>`).join("")}</div>
+        <div class="calendar__days">${cells}</div>
+        <div class="calendar__legend">
+          <span><i style="background:var(--cream);border:1px solid var(--line)"></i> Available</span>
+          <span><i style="background:var(--wood-soft)"></i> Weekend rate</span>
+          <span><i style="background:#f3e2e0"></i> Peak rate</span>
+          <span><i style="background:var(--forest-900)"></i> Booked</span>
+          <span><i style="background:repeating-linear-gradient(135deg,var(--cream-dark) 0 3px,var(--cream) 3px 6px)"></i> Unavailable</span>
+        </div>
+        <p class="calendar__hint">Tap a date to set your check-in, then another for check-out.</p>`;
+    }
+
+    function init() {
+      root = qs("#calendar");
+      const now = new Date();
+      view = { y: now.getFullYear(), m: now.getMonth() };
+      root.addEventListener("click", (e) => {
+        const nav = e.target.closest("[data-cal]");
+        if (nav && !nav.disabled) {
+          const d = new Date(view.y, view.m + Number(nav.dataset.cal), 1);
+          view = { y: d.getFullYear(), m: d.getMonth() };
+          render();
+          return;
+        }
+        const day = e.target.closest(".day--free");
+        if (day) document.dispatchEvent(new CustomEvent("calendar:pick", { detail: { date: day.dataset.date } }));
+      });
+      window.addEventListener("store:change", render);
+      render();
+    }
+
+    function setRange(from, to) {
+      range = { from: from || null, to: to || null };
+      if (from) {
+        const d = UI.parseISO(from);
+        view = { y: d.getFullYear(), m: d.getMonth() };
+      }
+      render();
+    }
+
+    return { init, render, setRange };
+  })();
+
+  /* ---------------------------------------------------------- rate card */
+  function initRates() {
+    const s = Store.getSettings();
+    const p = s.pricing;
+    const weekendNames = (p.weekendNights || []).map((d) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(" & ");
+    const peakRows = (p.peakRanges || [])
+      .filter((r) => r.to >= UI.todayISO())
+      .map(
+        (r) => `
+        <div class="rate-row rate-row--peak">
+          <div class="rate-row__label">${esc(r.label || "Peak season")}<small>${UI.fmtRange(r.from, r.to)}</small></div>
+          <div class="rate-row__value">${UI.fmtRM(r.price)} <small>/ night</small></div>
+        </div>`
+      )
+      .join("");
+    qs("#rateCard").innerHTML = `
+      <div class="rate-card__title">Nightly rates</div>
+      <div>
+        <div class="rate-row">
+          <div class="rate-row__label">Weekday night<small>Sun - Thu nights</small></div>
+          <div class="rate-row__value">${UI.fmtRM(p.weekday)} <small>/ night</small></div>
+        </div>
+        <div class="rate-row">
+          <div class="rate-row__label">Weekend night<small>${esc(weekendNames)} nights</small></div>
+          <div class="rate-row__value">${UI.fmtRM(p.weekend)} <small>/ night</small></div>
+        </div>
+        ${peakRows}
+        <div class="rate-row">
+          <div class="rate-row__label">Cleaning fee<small>once per stay</small></div>
+          <div class="rate-row__value">${UI.fmtRM(p.cleaningFee)}</div>
+        </div>
+      </div>
+      <div class="rate-card__meta">
+        <span class="chip">Min ${UI.plural(p.minNights, "night")}</span>
+        <span class="chip">Up to ${s.maxGuests} guests</span>
+        <span class="chip">Whole house</span>
+      </div>
+      <a href="#book" class="btn btn--primary btn--block">Book your dates</a>
+      <p class="hint text-center">Bank transfer only. Your dates are held once we receive your receipt.</p>`;
+  }
+
   /* --------------------------------------------------------------- boot */
   UI.ready(async () => {
     await Store.init();
@@ -186,6 +338,9 @@
     initGallery();
     initLightbox();
     initAbout();
+    calendar.init();
+    initRates();
+    window.addEventListener("store:change", initRates);
     UI.initReveal();
   });
 })();
