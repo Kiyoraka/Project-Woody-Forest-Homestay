@@ -59,8 +59,16 @@
       if (slides.length > 1 && !UI.prefersReducedMotion()) timer = setInterval(() => go(index + 1), 6500);
     }
 
+    void slidesBox.offsetWidth; // flush layout so the first slide's zoom transitions instead of jumping
     go(0);
-    restart();
+    // decode every hero photo up front so a crossfade never waits on a JPEG decode
+    Promise.all(
+      images.map((img) => {
+        const pic = new Image();
+        pic.src = img.src;
+        return pic.decode ? pic.decode().catch(() => {}) : Promise.resolve();
+      })
+    ).then(restart);
     document.addEventListener("visibilitychange", () => (document.hidden ? clearInterval(timer) : restart()));
 
     // touch swipe between hero photos
