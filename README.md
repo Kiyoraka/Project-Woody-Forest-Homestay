@@ -86,7 +86,8 @@ index.html              Landing page
 admin/login.html        Owner sign-in
 admin/dashboard.html    Owner dashboard (Main, Analysis, Booking, Customer, Setting)
 css/                    base.css (tokens + animations), landing.css, admin.css
-js/                     store.js (data + pricing engine), ui.js, landing.js, admin.js, charts.js
+js/                     store.js (data + pricing engine), ui.js, landing.js, charts.js
+js/admin/               core.js (router, auth, helpers) + view-main / view-booking / view-customer / view-setting
 assets/img/             Homestay photos, logo and favicon
 tools/                  Developer scripts (image generation) — not needed to run the site
 ```
