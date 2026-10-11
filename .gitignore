@@ -3,3 +3,7 @@
 # List of ignore files
 *.exe
 *.txt
+# Project Resources (Alice working reference - never commit)
+Project Resources
+# generated PNG masters from gpt-image-2 (jpg copies ship in assets/img)
+tools/out/
