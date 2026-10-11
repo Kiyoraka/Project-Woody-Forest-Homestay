@@ -302,7 +302,14 @@
         { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
       );
     }
-    nodes.forEach((n) => revealObserver.observe(n));
+    // Anything already on screen is revealed synchronously - above-the-fold
+    // content must never wait for the observer's first callback.
+    const vh = global.innerHeight || document.documentElement.clientHeight;
+    nodes.forEach((n) => {
+      const r = n.getBoundingClientRect();
+      if (r.top < vh * 0.92 && r.bottom > 0) n.classList.add("is-visible");
+      else revealObserver.observe(n);
+    });
   }
 
   /* -------------------------------------------------------------- Count-up */
