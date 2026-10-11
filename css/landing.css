@@ -1487,8 +1487,18 @@ body.landing {
   height: 50px;
 }
 
+.track-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
 .track-result:empty {
   display: none;
+}
+
+.track-result .stepper {
+  margin: var(--space-2) 0;
 }
 
 .track-result__head {
