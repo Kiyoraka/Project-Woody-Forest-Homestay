@@ -38,7 +38,13 @@
         <a href="#rates" class="nav__link">Rates</a>
         <a href="#track" class="nav__link">Track</a>
       </nav>
-      <a href="#book" class="btn btn--primary nav__cta">Book Now</a>
+      <div class="nav__actions">
+        <a href="admin/login.html" class="btn btn--ghost btn--sm nav__owner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          Login
+        </a>
+        <a href="#book" class="btn btn--primary nav__cta">Book Now</a>
+      </div>
     </div>
   </header>
 
@@ -216,16 +222,12 @@
         <div class="section-head reveal">
           <span class="eyebrow">Track booking</span>
           <h2 class="h2">Where is my booking?</h2>
-          <p class="lead">Enter your reference code and the phone number you booked with.</p>
+          <p class="lead">Enter the phone number you booked with and we will find your stay.</p>
         </div>
         <div class="track__panel card card--pad reveal" id="trackPanel">
           <form class="track-form" id="trackForm" novalidate>
             <div class="field">
-              <label class="label" for="trackRef">Reference code</label>
-              <input class="input" type="text" id="trackRef" placeholder="WF-2026-0001" autocomplete="off" spellcheck="false" required>
-            </div>
-            <div class="field">
-              <label class="label" for="trackPhone">Phone number used</label>
+              <label class="label" for="trackPhone">Phone number used when booking</label>
               <input class="input" type="tel" id="trackPhone" placeholder="012-345 6789" autocomplete="tel" required>
             </div>
             <button type="submit" class="btn btn--primary btn--lg" id="trackSubmit">

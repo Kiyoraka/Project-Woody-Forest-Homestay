@@ -674,7 +674,8 @@
     const CROSS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
     const INFO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>';
     let f = {};
-    let lastRef = null;
+    let results = [];
+    let selectedRef = null;
 
     function whatsappLink(settings, text) {
       return `https://wa.me/${Store.digitsOnly(settings.whatsapp)}?text=${encodeURIComponent(text)}`;
@@ -721,9 +722,22 @@
       }
     }
 
+    function switcher(list, current) {
+      if (list.length < 2) return "";
+      return `
+        <div class="track-switch">
+          <span>${UI.plural(list.length, "booking")} on this number:</span>
+          ${list
+            .map((x) => `<button type="button" class="chip ${x.ref === current ? "is-active" : ""}" data-switch="${esc(x.ref)}">${esc(x.ref)} · ${esc(x.status.toLowerCase())}</button>`)
+            .join("")}
+        </div>`;
+    }
+
     function render(b) {
       const s = Store.getSettings();
+      selectedRef = b.ref;
       f.result.innerHTML = `
+        ${switcher(results, b.ref)}
         <div class="track-result__head">
           <div>
             <div class="track-result__ref">${esc(b.ref)}</div>
@@ -743,58 +757,57 @@
           <a class="btn btn--outline btn--sm" href="${whatsappLink(s, `Hi, this is ${b.name} about booking ${b.ref}.`)}" target="_blank" rel="noopener">WhatsApp the owner</a>
           <a class="btn btn--ghost btn--sm" href="#book">Book another stay</a>
         </div>`;
+      qsa("[data-switch]", f.result).forEach((chip) =>
+        chip.addEventListener("click", () => {
+          const next = results.find((x) => x.ref === chip.dataset.switch);
+          if (next) render(next);
+        })
+      );
     }
 
     function renderMissing() {
       f.result.innerHTML = `
         <div class="track-result__missing">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
-          <strong>We could not find that booking.</strong>
-          <span>Check the reference (it looks like WF-2026-0001) and use the phone number you booked with.</span>
+          <strong>No booking found for that number.</strong>
+          <span>Use the same phone number you entered when booking, for example 012-345 6789.</span>
         </div>`;
       f.panel.classList.add("shake");
       setTimeout(() => f.panel.classList.remove("shake"), 500);
     }
 
-    function lookup(ref, phone) {
-      [f.ref, f.phone].forEach(UI.clearInvalid);
-      let ok = true;
-      if (!ref.trim()) {
-        UI.setInvalid(f.ref, "Enter your reference code.");
-        ok = false;
-      }
-      if (Store.digitsOnly(phone).length < 4) {
+    function lookup(phone, preferRef) {
+      UI.clearInvalid(f.phone);
+      if (Store.phoneKey(phone).length < 7) {
         UI.setInvalid(f.phone, "Enter the phone number you booked with.");
-        ok = false;
+        return;
       }
-      if (!ok) return;
-      const b = Store.trackBooking(ref, phone);
-      lastRef = b ? b.ref : null;
-      if (b) render(b);
-      else renderMissing();
+      results = Store.trackByPhone(phone);
+      if (!results.length) {
+        selectedRef = null;
+        renderMissing();
+        return;
+      }
+      // prefer the booking just made, otherwise the next upcoming / most recent one
+      const today = UI.todayISO();
+      const upcoming = results.filter((b) => b.checkOut >= today && b.status !== "REJECTED" && b.status !== "CANCELLED");
+      const pick = (preferRef && results.find((b) => b.ref === preferRef)) || upcoming[upcoming.length - 1] || results[0];
+      render(pick);
     }
 
     function init() {
-      f = { panel: qs("#trackPanel"), form: qs("#trackForm"), ref: qs("#trackRef"), phone: qs("#trackPhone"), result: qs("#trackResult") };
+      f = { panel: qs("#trackPanel"), form: qs("#trackForm"), phone: qs("#trackPhone"), result: qs("#trackResult") };
       f.form.addEventListener("submit", (e) => {
         e.preventDefault();
-        lookup(f.ref.value, f.phone.value);
-      });
-      f.ref.addEventListener("input", () => {
-        f.ref.value = f.ref.value.toUpperCase();
-        UI.clearInvalid(f.ref);
+        lookup(f.phone.value);
       });
       f.phone.addEventListener("input", () => UI.clearInvalid(f.phone));
       document.addEventListener("track:prefill", (e) => {
-        f.ref.value = e.detail.ref;
         f.phone.value = e.detail.phone;
-        lookup(e.detail.ref, e.detail.phone);
+        lookup(e.detail.phone, e.detail.ref);
       });
       window.addEventListener("store:change", () => {
-        if (lastRef && f.result.innerHTML) {
-          const b = Store.trackBooking(lastRef, f.phone.value);
-          if (b) render(b);
-        }
+        if (selectedRef && f.result.innerHTML) lookup(f.phone.value, selectedRef);
       });
     }
 
@@ -833,7 +846,10 @@
       </div>
       <div class="footer__bottom">
         <span>&copy; ${new Date().getFullYear()} ${esc(s.name)}. All rights reserved.</span>
-        <a href="admin/login.html">Owner sign in</a>
+        <a class="btn btn--light btn--sm" href="admin/login.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          Login
+        </a>
       </div>`;
   }
 

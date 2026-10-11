@@ -288,6 +288,23 @@
     return a && a === c ? b : null;
   }
 
+  /** Phone digits with the Malaysian country code and leading zero stripped, so 012..., 6012... and +6012... all match. */
+  function phoneKey(phone) {
+    let d = digitsOnly(phone);
+    if (d.startsWith("60")) d = d.slice(2);
+    if (d.startsWith("0")) d = d.slice(1);
+    return d;
+  }
+
+  /** Guest tracker by phone only: every booking made with that number, newest check-in first. */
+  function trackByPhone(phone) {
+    const key = phoneKey(phone);
+    if (key.length < 7) return [];
+    return getBookings()
+      .filter((b) => phoneKey(b.phone) === key)
+      .sort((a, b) => b.checkIn.localeCompare(a.checkIn));
+  }
+
   /* -------------------------------------------------------------- customers */
   function getCustomers() {
     const map = new Map();
@@ -654,6 +671,8 @@
     updateBooking,
     setBookingStatus,
     trackBooking,
+    trackByPhone,
+    phoneKey,
     // derived
     getCustomers,
     monthlySeries,

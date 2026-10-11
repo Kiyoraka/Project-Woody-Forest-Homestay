@@ -116,14 +116,35 @@ body.landing {
   transform: scaleX(1);
 }
 
-.nav__cta {
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   flex: none;
+}
+
+.nav__owner {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.nav__owner:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.nav.is-scrolled .nav__owner:hover {
+  background: rgba(31, 77, 53, 0.08);
 }
 
 @media (max-width: 767px) {
   .nav__links,
   .nav__cta {
     display: none;
+  }
+
+  .nav__owner {
+    padding: 0.45rem 0.7rem;
   }
 
   .nav {
@@ -1427,9 +1448,39 @@ body.landing {
 
 .track-form {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space-4);
   align-items: end;
+}
+
+.track-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.track-switch .chip {
+  cursor: pointer;
+  transition: background-color var(--dur-fast), color var(--dur-fast), transform var(--dur-fast) var(--ease-out);
+}
+
+.track-switch .chip:hover {
+  transform: translateY(-1px);
+}
+
+.track-switch .chip.is-active {
+  background: var(--forest-900);
+  color: var(--white);
+}
+
+.track-switch + .track-result__head {
+  border-top: 0;
+  padding-top: var(--space-4);
 }
 
 .track-form .btn {
