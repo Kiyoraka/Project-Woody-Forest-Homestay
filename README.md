@@ -26,6 +26,25 @@ Built with plain HTML, CSS and JavaScript — no framework, no build step, no ba
 - Setting: homestay profile, pricing (weekend nights, peak ranges, blocked dates), images (add, reorder, set hero, remove), bank details, owner account
 - Responsive layout: drawer sidebar and bottom navigation on phones
 
+## Screenshots
+
+| Landing page (desktop) | Landing page (phone and tablet) |
+|---|---|
+| ![Landing page on desktop](docs/screenshots/landing-desktop.jpg) | ![Landing page on a phone and a tablet](docs/screenshots/landing-phone-tablet.jpg) |
+
+| Owner dashboard |
+|---|
+| ![Owner dashboard main view](docs/screenshots/dashboard-main.jpg) |
+
+## Try it in two minutes
+
+1. Open the landing page and scroll to **Rates & availability**. Tap a free date for check-in and a later one for check-out; the booking form fills itself and the total appears on the right.
+2. Enter a name and phone number, attach any image as the "receipt" and press **Submit booking**. Note the reference code (for example `WF-2026-0013`).
+3. Scroll to **Track booking**, enter the reference and the phone number: the booking shows as *Pending*.
+4. Open the owner dashboard (link in the footer or `admin/login.html`), sign in with the demo login and go to **Booking**. Open the new booking, look at the receipt and press **Confirm booking**.
+5. Back on the landing page, track the booking again: it now shows *Confirmed*, and the calendar marks those nights as booked.
+6. In **Setting**, change a price or add a photo; the landing page picks it up on the next load (or immediately if it is open in another tab).
+
 ## Running the site
 
 Open `index.html` directly in a browser, or serve the folder so the admin login works on every browser:
