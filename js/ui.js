@@ -211,7 +211,7 @@
     if (!backdrop) return;
     backdrop.classList.add("is-open");
     document.body.classList.add("modal-open");
-    openModals.push(backdrop);
+    if (!openModals.includes(backdrop)) openModals.push(backdrop);
     const focusable = qs("[autofocus], input, select, textarea, button", backdrop);
     if (focusable) setTimeout(() => focusable.focus(), 50);
   }
