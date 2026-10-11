@@ -116,6 +116,12 @@
       .sort((a, b) => a.order - b.order);
   }
 
+  /** Seeded photo paths are relative to the site root; pages in sub-folders set Store.assetBase = "../". */
+  function imageUrl(src) {
+    if (!src || /^(data:|https?:|\/)/.test(src)) return src;
+    return (global.Store && global.Store.assetBase ? global.Store.assetBase : "") + src;
+  }
+
   function getHeroImages() {
     const imgs = getImages();
     const hero = imgs.filter((i) => i.isHero);
@@ -616,6 +622,10 @@
   async function init() {
     seedIfNeeded();
     await ensureAdmin();
+    // another tab (e.g. the dashboard) wrote to our keys: re-render as if we changed it
+    global.addEventListener("storage", (e) => {
+      if (e.key && e.key.startsWith("wf_")) global.dispatchEvent(new CustomEvent("store:change", { detail: { key: e.key, remote: true } }));
+    });
   }
 
   global.Store = {
@@ -630,6 +640,8 @@
     saveSettings,
     getImages,
     getHeroImages,
+    imageUrl,
+    assetBase: "",
     // pricing + availability
     nightPrice,
     quote,
