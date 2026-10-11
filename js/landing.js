@@ -624,6 +624,176 @@
     return { init };
   })();
 
+  /* ------------------------------------------------------------ tracker */
+  const tracker = (() => {
+    const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+    const CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>';
+    const CROSS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+    const INFO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>';
+    let f = {};
+    let lastRef = null;
+
+    function whatsappLink(settings, text) {
+      return `https://wa.me/${Store.digitsOnly(settings.whatsapp)}?text=${encodeURIComponent(text)}`;
+    }
+
+    function stepper(b) {
+      const ended = b.status === "REJECTED" || b.status === "CANCELLED";
+      const reviewed = b.history && b.history.find((h) => h.by === "owner");
+      const steps = [
+        { label: "Submitted", sub: UI.fmtDateTime(b.createdAt), icon: CHECK, state: "is-done" },
+        {
+          label: "Payment review",
+          sub: ended || b.status !== "PENDING" ? (reviewed ? UI.fmtDateTime(reviewed.at) : "Reviewed") : "Within 24 hours",
+          icon: b.status === "PENDING" ? CLOCK : ended ? CROSS : CHECK,
+          state: b.status === "PENDING" ? "is-current" : ended ? "is-ended" : "is-done"
+        },
+        {
+          label: b.status === "COMPLETED" ? "Completed" : ended ? (b.status === "REJECTED" ? "Not accepted" : "Cancelled") : "Confirmed",
+          sub: b.status === "CONFIRMED" ? `Check-in ${UI.fmtDate(b.checkIn, { year: false })}` : b.status === "COMPLETED" ? "Thank you for staying" : ended ? "" : "After review",
+          icon: ended ? CROSS : b.status === "CONFIRMED" || b.status === "COMPLETED" ? CHECK : CLOCK,
+          state: ended ? "is-ended" : b.status === "CONFIRMED" ? "is-current" : b.status === "COMPLETED" ? "is-done" : ""
+        }
+      ];
+      return `<div class="stepper ${ended ? "stepper--ended" : ""}">${steps
+        .map((s) => `<div class="step ${s.state}"><span class="step__dot">${s.icon}</span>${esc(s.label)}<small>${esc(s.sub)}</small></div>`)
+        .join("")}</div>`;
+    }
+
+    function note(b, settings) {
+      const wa = whatsappLink(settings, `Hi, I am asking about booking ${b.ref}.`);
+      switch (b.status) {
+        case "PENDING":
+          return `<div class="track-result__note track-result__note--warning">${CLOCK}<div><strong>We are checking your transfer.</strong> You will see Confirmed here once the owner verifies the receipt, usually within 24 hours.</div></div>`;
+        case "CONFIRMED":
+          return `<div class="track-result__note track-result__note--success">${CHECK}<div><strong>Your stay is confirmed.</strong> Check-in from 3:00 PM on ${UI.fmtDate(b.checkIn)}. The owner will share directions on WhatsApp before you arrive.${b.note ? ` <em>Owner's note: ${esc(b.note)}</em>` : ""}</div></div>`;
+        case "COMPLETED":
+          return `<div class="track-result__note track-result__note--info">${INFO}<div><strong>This stay is complete.</strong> Thank you for choosing Woody Forest - we would love to host you again.</div></div>`;
+        case "REJECTED":
+          return `<div class="track-result__note track-result__note--danger">${CROSS}<div><strong>We could not accept this booking.</strong> ${b.note ? esc(b.note) : "The transfer could not be verified."} Please <a href="${wa}" target="_blank" rel="noopener"><u>message us on WhatsApp</u></a> and we will sort it out.</div></div>`;
+        case "CANCELLED":
+          return `<div class="track-result__note track-result__note--danger">${CROSS}<div><strong>This booking was cancelled.</strong> ${b.note ? esc(b.note) : ""} The dates are released - you are welcome to book again.</div></div>`;
+        default:
+          return "";
+      }
+    }
+
+    function render(b) {
+      const s = Store.getSettings();
+      f.result.innerHTML = `
+        <div class="track-result__head">
+          <div>
+            <div class="track-result__ref">${esc(b.ref)}</div>
+            <div class="track-result__guest">${esc(b.name)} · ${UI.plural(b.guests, "guest")}</div>
+          </div>
+          <span class="status status--${esc(b.status)}">${esc(b.status.toLowerCase())}</span>
+        </div>
+        ${stepper(b)}
+        <div class="track-result__grid">
+          <div class="track-result__cell"><span>Check-in</span>${UI.fmtDate(b.checkIn)}</div>
+          <div class="track-result__cell"><span>Check-out</span>${UI.fmtDate(b.checkOut)}</div>
+          <div class="track-result__cell"><span>Nights</span>${b.nights}</div>
+          <div class="track-result__cell"><span>Total</span>${UI.fmtRM(b.total)}</div>
+        </div>
+        ${note(b, s)}
+        <div class="track-result__actions">
+          <a class="btn btn--outline btn--sm" href="${whatsappLink(s, `Hi, this is ${b.name} about booking ${b.ref}.`)}" target="_blank" rel="noopener">WhatsApp the owner</a>
+          <a class="btn btn--ghost btn--sm" href="#book">Book another stay</a>
+        </div>`;
+    }
+
+    function renderMissing() {
+      f.result.innerHTML = `
+        <div class="track-result__missing">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
+          <strong>We could not find that booking.</strong>
+          <span>Check the reference (it looks like WF-2026-0001) and use the phone number you booked with.</span>
+        </div>`;
+      f.panel.classList.add("shake");
+      setTimeout(() => f.panel.classList.remove("shake"), 500);
+    }
+
+    function lookup(ref, phone) {
+      [f.ref, f.phone].forEach(UI.clearInvalid);
+      let ok = true;
+      if (!ref.trim()) {
+        UI.setInvalid(f.ref, "Enter your reference code.");
+        ok = false;
+      }
+      if (Store.digitsOnly(phone).length < 4) {
+        UI.setInvalid(f.phone, "Enter the phone number you booked with.");
+        ok = false;
+      }
+      if (!ok) return;
+      const b = Store.trackBooking(ref, phone);
+      lastRef = b ? b.ref : null;
+      if (b) render(b);
+      else renderMissing();
+    }
+
+    function init() {
+      f = { panel: qs("#trackPanel"), form: qs("#trackForm"), ref: qs("#trackRef"), phone: qs("#trackPhone"), result: qs("#trackResult") };
+      f.form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        lookup(f.ref.value, f.phone.value);
+      });
+      f.ref.addEventListener("input", () => {
+        f.ref.value = f.ref.value.toUpperCase();
+        UI.clearInvalid(f.ref);
+      });
+      f.phone.addEventListener("input", () => UI.clearInvalid(f.phone));
+      document.addEventListener("track:prefill", (e) => {
+        f.ref.value = e.detail.ref;
+        f.phone.value = e.detail.phone;
+        lookup(e.detail.ref, e.detail.phone);
+      });
+      window.addEventListener("store:change", () => {
+        if (lastRef && f.result.innerHTML) {
+          const b = Store.trackBooking(lastRef, f.phone.value);
+          if (b) render(b);
+        }
+      });
+    }
+
+    return { init };
+  })();
+
+  /* ------------------------------------------------------------- footer */
+  function initFooter() {
+    const s = Store.getSettings();
+    const wa = `https://wa.me/${Store.digitsOnly(s.whatsapp)}`;
+    const PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+    const PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>';
+    const MAIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
+    const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
+    qs("#footerInner").innerHTML = `
+      <div>
+        <a class="brand" href="#home"><img class="brand__mark" src="assets/img/logo.svg" alt="" width="40" height="40"><span class="brand__text">Woody <em>Forest</em></span></a>
+        <p class="footer__tagline">${esc(s.tagline)}. ${esc(s.bedrooms)} bedrooms, ${esc(s.bathrooms)} bathrooms, up to ${esc(s.maxGuests)} guests, all yours.</p>
+      </div>
+      <div>
+        <div class="footer__title">Find us</div>
+        <div class="footer__list">
+          <a href="https://maps.google.com/?q=${encodeURIComponent(s.address)}" target="_blank" rel="noopener">${PIN}<span>${esc(s.address)}</span></a>
+          <a href="${wa}" target="_blank" rel="noopener">${PHONE}<span>WhatsApp +${esc(Store.digitsOnly(s.whatsapp))}</span></a>
+          <a href="mailto:${esc(s.email)}">${MAIL}<span>${esc(s.email)}</span></a>
+        </div>
+      </div>
+      <div>
+        <div class="footer__title">Quick links</div>
+        <div class="footer__list">
+          <a href="#gallery">${ARROW}<span>Gallery</span></a>
+          <a href="#rates">${ARROW}<span>Rates &amp; availability</span></a>
+          <a href="#book">${ARROW}<span>Book a stay</span></a>
+          <a href="#track">${ARROW}<span>Track a booking</span></a>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <span>&copy; ${new Date().getFullYear()} ${esc(s.name)}. All rights reserved.</span>
+        <a href="admin/login.html">Owner sign in</a>
+      </div>`;
+  }
+
   /* --------------------------------------------------------------- boot */
   UI.ready(async () => {
     await Store.init();
@@ -635,7 +805,10 @@
     calendar.init();
     initRates();
     booking.init();
+    tracker.init();
+    initFooter();
     window.addEventListener("store:change", initRates);
+    window.addEventListener("store:change", initFooter);
     UI.initReveal();
   });
 })();

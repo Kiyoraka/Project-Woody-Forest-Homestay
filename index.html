@@ -208,7 +208,23 @@
           <h2 class="h2">Where is my booking?</h2>
           <p class="lead">Enter your reference code and the phone number you booked with.</p>
         </div>
-        <div class="track__panel card card--pad reveal" id="trackPanel"></div>
+        <div class="track__panel card card--pad reveal" id="trackPanel">
+          <form class="track-form" id="trackForm" novalidate>
+            <div class="field">
+              <label class="label" for="trackRef">Reference code</label>
+              <input class="input" type="text" id="trackRef" placeholder="WF-2026-0001" autocomplete="off" spellcheck="false" required>
+            </div>
+            <div class="field">
+              <label class="label" for="trackPhone">Phone number used</label>
+              <input class="input" type="tel" id="trackPhone" placeholder="012-345 6789" autocomplete="tel" required>
+            </div>
+            <button type="submit" class="btn btn--primary btn--lg" id="trackSubmit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              Track
+            </button>
+          </form>
+          <div class="track-result" id="trackResult"></div>
+        </div>
       </div>
     </section>
   </main>
