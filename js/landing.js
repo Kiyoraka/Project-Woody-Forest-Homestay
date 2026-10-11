@@ -330,6 +330,300 @@
       <p class="hint text-center">Bank transfer only. Your dates are held once we receive your receipt.</p>`;
   }
 
+  /* ------------------------------------------------------------ booking */
+  const booking = (() => {
+    let f = {};
+    let receipt = null;
+    let lastQuote = null;
+
+    function refs() {
+      f = {
+        form: qs("#bookingForm"),
+        checkIn: qs("#checkIn"),
+        checkOut: qs("#checkOut"),
+        guests: qs("#guests"),
+        name: qs("#guestName"),
+        phone: qs("#guestPhone"),
+        email: qs("#guestEmail"),
+        bank: qs("#bankBox"),
+        dropzone: qs("#dropzone"),
+        file: qs("#receiptFile"),
+        idle: qs("#dropzoneIdle"),
+        preview: qs("#dropzonePreview"),
+        previewImg: qs("#receiptPreview"),
+        previewName: qs("#receiptName"),
+        remove: qs("#receiptRemove"),
+        submit: qs("#bookSubmit"),
+        summary: qs("#summary"),
+        success: qs("#bookingSuccess")
+      };
+    }
+
+    function renderBank() {
+      const s = Store.getSettings();
+      const total = lastQuote && lastQuote.ok ? lastQuote.total : null;
+      f.bank.innerHTML = `
+        <div>
+          <div class="bank-box__label">${esc(s.bank.bankName)} transfer</div>
+          <div class="bank-box__acct" id="bankAcct">${esc(s.bank.accountNo)}</div>
+          <div class="bank-box__holder">${esc(s.bank.holder)}</div>
+        </div>
+        <div class="bank-box__total">
+          <strong>${total !== null ? UI.fmtRM(total) : "--"}</strong>
+          <span>amount to transfer</span>
+        </div>
+        <button type="button" class="btn btn--outline btn--sm" id="copyAcct">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          Copy account number
+        </button>`;
+      qs("#copyAcct", f.bank).addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(s.bank.accountNo.replace(/\s+/g, ""));
+          UI.toast("Account number copied", "success");
+        } catch (e) {
+          UI.toast("Copy not available here - please type the number", "warning");
+        }
+      });
+    }
+
+    function groupNights(nights) {
+      const groups = {};
+      nights.forEach((n) => {
+        const key = n.kind === "peak" ? `Peak night (${n.label || "holiday rate"})` : n.kind === "weekend" ? "Weekend night" : "Weekday night";
+        const g = groups[key] || { count: 0, price: n.price, total: 0 };
+        g.count += 1;
+        g.total += n.price;
+        groups[key] = g;
+      });
+      return Object.entries(groups);
+    }
+
+    function renderSummary() {
+      const q = lastQuote;
+      const ci = f.checkIn.value;
+      const co = f.checkOut.value;
+      if (!ci || !co) {
+        f.summary.innerHTML = `
+          <div class="summary__title">Your stay</div>
+          <div class="summary__empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4m8-4v4"/></svg>
+            <span>Choose your check-in and check-out dates to see the total.</span>
+          </div>`;
+        return;
+      }
+      const rows = q.nights.length
+        ? groupNights(q.nights)
+            .map(([label, g]) => `<div class="summary__row"><span>${esc(label)} x ${g.count}</span><span>${UI.fmtRM(g.total)}</span></div>`)
+            .join("") + `<div class="summary__row"><span>Cleaning fee</span><span>${UI.fmtRM(q.cleaningFee)}</span></div>`
+        : "";
+      const status = q.ok
+        ? `<div class="summary__ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> These dates are available</div>`
+        : `<div class="summary__errors">${q.errors.map((e) => `<span>${esc(e)}</span>`).join("")}</div>`;
+      f.summary.innerHTML = `
+        <div class="summary__title">Your stay</div>
+        <div class="summary__dates">
+          <span>${UI.fmtDate(ci, { year: false })} <span class="muted">to</span> ${UI.fmtDate(co, { year: false })}</span>
+          <span>${UI.plural(q.nightsCount, "night")} · ${UI.plural(Number(f.guests.value), "guest")}</span>
+        </div>
+        <div class="summary__rows">${rows}</div>
+        ${q.nights.length ? `<div class="summary__total"><span>Total</span><strong>${UI.fmtRM(q.total)}</strong></div>` : ""}
+        ${status}`;
+    }
+
+    function updateQuote() {
+      lastQuote = Store.quote(f.checkIn.value, f.checkOut.value, f.guests.value);
+      renderSummary();
+      renderBank();
+      calendar.setRange(f.checkIn.value, f.checkOut.value);
+    }
+
+    async function attachFile(file) {
+      if (!file) return;
+      try {
+        receipt = await Store.resizeImage(file, { maxPx: 1200, quality: 0.8 });
+        f.previewImg.src = receipt;
+        f.previewName.textContent = file.name;
+        f.idle.classList.add("hidden");
+        f.preview.classList.remove("hidden");
+        f.dropzone.classList.add("has-file");
+      } catch (err) {
+        UI.toast(err.message || "Could not read that file", "error");
+      }
+    }
+
+    function clearFile() {
+      receipt = null;
+      f.file.value = "";
+      f.previewImg.src = "";
+      f.idle.classList.remove("hidden");
+      f.preview.classList.add("hidden");
+      f.dropzone.classList.remove("has-file");
+    }
+
+    function showSuccess(b) {
+      f.form.classList.add("hidden");
+      f.summary.classList.add("hidden");
+      f.success.classList.remove("hidden");
+      f.success.innerHTML = `
+        <div class="success__check">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 7"/></svg>
+        </div>
+        <span class="eyebrow">Booking received</span>
+        <h3 class="h2">Thank you, ${esc(b.name.split(" ")[0])}</h3>
+        <p class="lead text-center">Your dates are held. Keep this reference - you will need it to track your booking.</p>
+        <div class="success__ref"><span id="successRef">${esc(b.ref)}</span>
+          <button type="button" class="btn btn--icon btn--sm" id="copyRef" aria-label="Copy reference">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          </button>
+        </div>
+        <div class="success__grid">
+          <div class="success__cell"><span>Check-in</span>${UI.fmtDate(b.checkIn)}</div>
+          <div class="success__cell"><span>Check-out</span>${UI.fmtDate(b.checkOut)}</div>
+          <div class="success__cell"><span>Guests</span>${b.guests}</div>
+          <div class="success__cell"><span>Total</span>${UI.fmtRM(b.total)}</div>
+        </div>
+        <p class="hint">We will check your transfer and confirm within 24 hours. Status: <strong>Pending review</strong>.</p>
+        <div class="success__actions">
+          <a href="#track" class="btn btn--primary" id="successTrack">Track this booking</a>
+          <button type="button" class="btn btn--ghost" id="bookAgain">Make another booking</button>
+        </div>`;
+      qs("#copyRef").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(b.ref);
+          UI.toast("Reference copied", "success");
+        } catch (e) {
+          UI.toast("Copy not available here", "warning");
+        }
+      });
+      qs("#successTrack").addEventListener("click", () => {
+        document.dispatchEvent(new CustomEvent("track:prefill", { detail: { ref: b.ref, phone: b.phone } }));
+      });
+      qs("#bookAgain").addEventListener("click", () => {
+        f.success.classList.add("hidden");
+        f.form.classList.remove("hidden");
+        f.summary.classList.remove("hidden");
+        f.form.reset();
+        clearFile();
+        fillGuests();
+        updateQuote();
+        UI.scrollToId("#book", 80);
+      });
+      f.success.scrollIntoView({ behavior: UI.prefersReducedMotion() ? "auto" : "smooth", block: "center" });
+    }
+
+    function fillGuests() {
+      const max = Store.getSettings().maxGuests;
+      const current = Number(f.guests.value) || 2;
+      f.guests.innerHTML = Array.from({ length: max }, (_, i) => i + 1)
+        .map((n) => `<option value="${n}" ${n === Math.min(current, max) ? "selected" : ""}>${UI.plural(n, "guest")}</option>`)
+        .join("");
+    }
+
+    async function submit(e) {
+      e.preventDefault();
+      [f.name, f.phone, f.email].forEach(UI.clearInvalid);
+      const data = {
+        name: f.name.value,
+        phone: f.phone.value,
+        email: f.email.value,
+        checkIn: f.checkIn.value,
+        checkOut: f.checkOut.value,
+        guests: f.guests.value,
+        receipt
+      };
+      f.submit.disabled = true;
+      f.submit.textContent = "Submitting...";
+      const result = Store.createBooking(data);
+      f.submit.disabled = false;
+      f.submit.textContent = "Submit booking";
+      if (!result.ok) {
+        result.errors.forEach((msg) => {
+          if (/name/i.test(msg)) UI.setInvalid(f.name, msg);
+          else if (/phone/i.test(msg)) UI.setInvalid(f.phone, msg);
+          else if (/email/i.test(msg)) UI.setInvalid(f.email, msg);
+        });
+        if (result.errors.some((m) => /receipt/i.test(m))) f.dropzone.classList.add("shake");
+        setTimeout(() => f.dropzone.classList.remove("shake"), 500);
+        lastQuote = Store.quote(data.checkIn, data.checkOut, data.guests);
+        if (!lastQuote.ok) renderSummary();
+        UI.toast(result.errors[0], "error");
+        return;
+      }
+      UI.toast(`Booking ${result.booking.ref} received`, "success");
+      showSuccess(result.booking);
+    }
+
+    function init() {
+      refs();
+      const today = UI.todayISO();
+      f.checkIn.min = today;
+      f.checkOut.min = UI.addDays(today, 1);
+      fillGuests();
+      renderBank();
+      renderSummary();
+
+      f.checkIn.addEventListener("change", () => {
+        if (f.checkIn.value) {
+          f.checkOut.min = UI.addDays(f.checkIn.value, 1);
+          if (!f.checkOut.value || f.checkOut.value <= f.checkIn.value) f.checkOut.value = UI.addDays(f.checkIn.value, 1);
+        }
+        updateQuote();
+      });
+      f.checkOut.addEventListener("change", updateQuote);
+      f.guests.addEventListener("change", updateQuote);
+
+      document.addEventListener("calendar:pick", (e) => {
+        const d = e.detail.date;
+        if (!f.checkIn.value || (f.checkIn.value && f.checkOut.value) || d <= f.checkIn.value) {
+          f.checkIn.value = d;
+          f.checkOut.value = "";
+          f.checkOut.min = UI.addDays(d, 1);
+        } else {
+          f.checkOut.value = d;
+        }
+        updateQuote();
+        if (f.checkIn.value && f.checkOut.value) {
+          UI.toast(`${UI.fmtDate(f.checkIn.value, { year: false })} to ${UI.fmtDate(f.checkOut.value, { year: false })} selected`, "info", 2200);
+          UI.scrollToId("#book", 80);
+        }
+      });
+
+      f.dropzone.addEventListener("click", (e) => {
+        if (e.target.closest("#receiptRemove")) return;
+        if (!receipt) f.file.click();
+      });
+      f.dropzone.addEventListener("keydown", (e) => {
+        if ((e.key === "Enter" || e.key === " ") && !receipt) {
+          e.preventDefault();
+          f.file.click();
+        }
+      });
+      f.file.addEventListener("change", () => attachFile(f.file.files[0]));
+      ["dragenter", "dragover"].forEach((ev) =>
+        f.dropzone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          f.dropzone.classList.add("is-dragover");
+        })
+      );
+      ["dragleave", "drop"].forEach((ev) =>
+        f.dropzone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          f.dropzone.classList.remove("is-dragover");
+        })
+      );
+      f.dropzone.addEventListener("drop", (e) => attachFile(e.dataTransfer.files[0]));
+      f.remove.addEventListener("click", clearFile);
+      [f.name, f.phone, f.email].forEach((input) => input.addEventListener("input", () => UI.clearInvalid(input)));
+      f.form.addEventListener("submit", submit);
+      window.addEventListener("store:change", () => {
+        fillGuests();
+        if (!f.form.classList.contains("hidden")) updateQuote();
+      });
+    }
+
+    return { init };
+  })();
+
   /* --------------------------------------------------------------- boot */
   UI.ready(async () => {
     await Store.init();
@@ -340,6 +634,7 @@
     initAbout();
     calendar.init();
     initRates();
+    booking.init();
     window.addEventListener("store:change", initRates);
     UI.initReveal();
   });

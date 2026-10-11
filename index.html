@@ -127,7 +127,76 @@
           <h2 class="h2">Reserve the cabin</h2>
           <p class="lead">Choose your dates, transfer the total, upload the receipt. We confirm within 24 hours.</p>
         </div>
-        <div class="book__grid" id="bookGrid"></div>
+        <div class="book__grid" id="bookGrid">
+          <form class="book-form card card--pad reveal" id="bookingForm" novalidate>
+            <div class="form-section">
+              <h3 class="form-section__title"><span class="form-section__step">1</span> Your dates</h3>
+              <div class="form-grid">
+                <div class="field">
+                  <label class="label" for="checkIn">Check-in</label>
+                  <input class="input" type="date" id="checkIn" name="checkIn" required>
+                </div>
+                <div class="field">
+                  <label class="label" for="checkOut">Check-out</label>
+                  <input class="input" type="date" id="checkOut" name="checkOut" required>
+                </div>
+                <div class="field">
+                  <label class="label" for="guests">Guests</label>
+                  <select class="select" id="guests" name="guests"></select>
+                </div>
+              </div>
+              <p class="hint">Check-in from 3:00 PM, check-out by 12:00 PM. Tap dates on the calendar above to fill these in.</p>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section__title"><span class="form-section__step">2</span> Your details</h3>
+              <div class="form-grid">
+                <div class="field">
+                  <label class="label" for="guestName">Full name</label>
+                  <input class="input" type="text" id="guestName" name="name" placeholder="As per your IC or passport" autocomplete="name" required>
+                </div>
+                <div class="field">
+                  <label class="label" for="guestPhone">Phone / WhatsApp</label>
+                  <input class="input" type="tel" id="guestPhone" name="phone" placeholder="012-345 6789" autocomplete="tel" required>
+                </div>
+                <div class="field">
+                  <label class="label" for="guestEmail">Email <span class="optional">(optional)</span></label>
+                  <input class="input" type="email" id="guestEmail" name="email" placeholder="you@example.com" autocomplete="email">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section__title"><span class="form-section__step">3</span> Transfer &amp; receipt</h3>
+              <div class="bank-box" id="bankBox"></div>
+              <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload your bank transfer receipt">
+                <input type="file" id="receiptFile" accept="image/*" class="sr-only">
+                <div class="dropzone__idle" id="dropzoneIdle">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0 4 4m-4-4-4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                  <strong>Upload transfer receipt</strong>
+                  <span>Screenshot or photo, JPG or PNG. Tap to choose or drop it here.</span>
+                </div>
+                <div class="dropzone__preview hidden" id="dropzonePreview">
+                  <img id="receiptPreview" src="" alt="Your uploaded receipt">
+                  <div class="dropzone__meta">
+                    <strong>Receipt attached</strong>
+                    <span id="receiptName"></span>
+                    <button type="button" class="btn btn--ghost btn--sm" id="receiptRemove">Remove</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="book-form__foot">
+              <button type="submit" class="btn btn--primary btn--lg btn--block" id="bookSubmit">Submit booking</button>
+              <p class="hint text-center">Your dates are reserved as soon as you submit. We check the transfer and confirm within 24 hours.</p>
+            </div>
+          </form>
+
+          <aside class="summary card card--pad reveal reveal--right" id="summary" aria-live="polite"></aside>
+
+          <div class="success card card--pad hidden" id="bookingSuccess"></div>
+        </div>
       </div>
     </section>
 
