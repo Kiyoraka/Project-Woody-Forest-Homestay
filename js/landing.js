@@ -62,6 +62,49 @@
     go(0);
     restart();
     document.addEventListener("visibilitychange", () => (document.hidden ? clearInterval(timer) : restart()));
+
+    // touch swipe between hero photos
+    const hero = qs("#home");
+    let touchX = null;
+    let touchY = null;
+    hero.addEventListener(
+      "touchstart",
+      (e) => {
+        touchX = e.touches[0].clientX;
+        touchY = e.touches[0].clientY;
+      },
+      { passive: true }
+    );
+    hero.addEventListener(
+      "touchend",
+      (e) => {
+        if (touchX === null) return;
+        const dx = e.changedTouches[0].clientX - touchX;
+        const dy = e.changedTouches[0].clientY - touchY;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(index + (dx < 0 ? 1 : -1), true);
+        touchX = touchY = null;
+      },
+      { passive: true }
+    );
+  }
+
+  /* --------------------------------------------------------- bottom nav */
+  function initBottomNav() {
+    const nav = qs("#bottomNav");
+    const items = qsa(".bottom-nav__item", nav);
+    const pill = qs("#bottomNavPill");
+    const move = (active) => {
+      const i = Math.max(0, items.indexOf(active));
+      pill.style.transform = `translateX(${i * 100}%)`;
+    };
+    UI.scrollSpy(items, { offset: 180, onChange: move });
+    items.forEach((a) =>
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        UI.scrollToId(a.getAttribute("href"), 56);
+        history.replaceState(null, "", a.getAttribute("href"));
+      })
+    );
   }
 
   /* ---------------------------------------------------- gallery + lightbox */
@@ -807,6 +850,7 @@
     booking.init();
     tracker.init();
     initFooter();
+    initBottomNav();
     window.addEventListener("store:change", initRates);
     window.addEventListener("store:change", initFooter);
     UI.initReveal();

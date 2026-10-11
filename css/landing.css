@@ -8,6 +8,18 @@ body.landing {
   background: var(--cream);
 }
 
+/* keep anchored sections clear of the fixed navbar */
+.landing section[id],
+.landing footer[id] {
+  scroll-margin-top: 64px;
+}
+
+/* pre-reveal elements sit translated a few px outside the viewport;
+   clip (not hidden) so sticky children keep working */
+.landing .section {
+  overflow-x: clip;
+}
+
 /* --------------------------------------------------------------------------
    Navbar - transparent over the hero, glass once scrolled
    -------------------------------------------------------------------------- */
@@ -363,6 +375,7 @@ body.landing {
 
 .gallery__item {
   position: relative;
+  margin: 0;
   overflow: hidden;
   border-radius: var(--radius);
   background: var(--cream-dark);
