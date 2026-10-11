@@ -65,6 +65,8 @@
     });
     qs("#viewTitle").textContent = VIEWS[key].title;
     document.title = `${VIEWS[key].title} - Owner dashboard`;
+    const pill = qs("#adminNavPill");
+    if (pill) pill.style.transform = `translateX(${Math.max(0, Object.keys(VIEWS).indexOf(key)) * 100}%)`;
     const renderer = renderers[key];
     if (renderer) renderer(qs(`#view-${key}`));
     qs("#content").scrollTop = 0;
@@ -322,12 +324,12 @@
   function bookingTableRow(b) {
     return `
       <tr class="is-clickable" data-ref="${esc(b.ref)}">
-        <td><span class="ref">${esc(b.ref)}</span><span class="cell-sub">${UI.fmtDate(b.createdAt.slice(0, 10), { year: false })}</span></td>
-        <td><span class="cell-main">${esc(b.name)}</span><span class="cell-sub">${esc(b.phone)}</span></td>
-        <td><span class="cell-main">${UI.fmtRange(b.checkIn, b.checkOut)}</span><span class="cell-sub">${UI.plural(b.nights, "night")}</span></td>
-        <td class="num">${b.guests}</td>
-        <td class="num"><span class="cell-main">${UI.fmtRM(b.total)}</span></td>
-        <td><span class="status status--${esc(b.status)}">${esc(b.status.toLowerCase())}</span></td>
+        <td data-label="Ref"><span class="ref">${esc(b.ref)}</span><span class="cell-sub">${UI.fmtDate(b.createdAt.slice(0, 10), { year: false })}</span></td>
+        <td data-label="Guest"><span class="cell-main">${esc(b.name)}</span><span class="cell-sub">${esc(b.phone)}</span></td>
+        <td data-label="Dates"><span class="cell-main">${UI.fmtRange(b.checkIn, b.checkOut)}</span><span class="cell-sub">${UI.plural(b.nights, "night")}</span></td>
+        <td class="num" data-label="Pax">${b.guests}</td>
+        <td class="num" data-label="Total"><span class="cell-main">${UI.fmtRM(b.total)}</span></td>
+        <td data-label="Status"><span class="status status--${esc(b.status)}">${esc(b.status.toLowerCase())}</span></td>
         <td class="num"><button class="btn btn--outline btn--sm" data-open="${esc(b.ref)}">View</button></td>
       </tr>`;
   }
@@ -565,12 +567,12 @@
               .map(
                 (c) => `
                 <tr class="is-clickable" data-customer="${esc(c.id)}">
-                  <td><span class="cell-main">${esc(c.name)}</span><span class="cell-sub">${esc(c.email || "no email")}</span></td>
-                  <td>${esc(c.phone)}</td>
-                  <td class="num">${c.stays}</td>
-                  <td class="num"><span class="cell-main">${UI.fmtRM(c.totalSpent)}</span></td>
-                  <td>${c.lastStay ? UI.fmtDate(c.lastStay) : "--"}</td>
-                  <td class="num">${c.bookings.length}</td>
+                  <td data-label="Customer"><span class="cell-main">${esc(c.name)}</span><span class="cell-sub">${esc(c.email || "no email")}</span></td>
+                  <td data-label="Phone">${esc(c.phone)}</td>
+                  <td class="num" data-label="Stays">${c.stays}</td>
+                  <td class="num" data-label="Total spent"><span class="cell-main">${UI.fmtRM(c.totalSpent)}</span></td>
+                  <td data-label="Last stay">${c.lastStay ? UI.fmtDate(c.lastStay) : "--"}</td>
+                  <td class="num" data-label="Bookings">${c.bookings.length}</td>
                 </tr>`
               )
               .join("")}</tbody>

@@ -128,13 +128,13 @@
   function customerRowHTML(c) {
     return `
       <tr>
-        <td>
+        <td data-label="Customer">
           <strong>${UI.esc(c.name)}</strong>
           <div class="muted small">${UI.esc(c.phone)}</div>
         </td>
-        <td>${UI.esc(UI.fmtNumber(c.stays))}</td>
-        <td class="num">${UI.esc(UI.fmtRM(c.totalSpent))}</td>
-        <td>${UI.esc(UI.fmtDate(c.lastStay))}</td>
+        <td data-label="Stays">${UI.esc(UI.fmtNumber(c.stays))}</td>
+        <td class="num" data-label="Total spent">${UI.esc(UI.fmtRM(c.totalSpent))}</td>
+        <td data-label="Last stay">${UI.esc(UI.fmtDate(c.lastStay))}</td>
       </tr>`;
   }
 
