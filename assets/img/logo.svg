@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Woody Forest Homestay">
+  <defs>
+    <linearGradient id="wf-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2f7a52"/>
+      <stop offset="1" stop-color="#122a1d"/>
+    </linearGradient>
+    <linearGradient id="wf-tree" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7f2e8"/>
+      <stop offset="1" stop-color="#d9e6dc"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="31" fill="url(#wf-bg)"/>
+  <circle cx="32" cy="32" r="27.5" fill="none" stroke="#ffffff" stroke-opacity="0.18"/>
+  <!-- pine: three stacked tiers -->
+  <path d="M32 11 L40 23 H36.5 L43 33 H38.5 L46 44 H18 L25.5 33 H21 L27.5 23 H24 Z" fill="url(#wf-tree)"/>
+  <!-- trunk -->
+  <rect x="29.5" y="44" width="5" height="7" rx="1" fill="#b8894f"/>
+  <!-- ground line -->
+  <path d="M15 52 Q32 48 49 52" fill="none" stroke="#7fa98a" stroke-width="2" stroke-linecap="round"/>
+</svg>
