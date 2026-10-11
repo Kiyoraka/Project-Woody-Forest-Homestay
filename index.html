@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Woody Forest Homestay - A timber cabin wrapped in rainforest</title>
+  <meta name="description" content="Private three-bedroom timber homestay in the Kelantan rainforest. Check rates and availability, book online and track your stay.">
+  <meta name="theme-color" content="#122a1d">
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/landing.css">
+</head>
+<body class="landing">
+
+  <!-- ============================================================ NAVBAR -->
+  <header class="nav" id="nav">
+    <div class="container nav__inner">
+      <a class="brand" href="#home" aria-label="Woody Forest Homestay - home">
+        <img class="brand__mark" src="assets/img/logo.svg" alt="" width="40" height="40">
+        <span class="brand__text">Woody <em>Forest</em></span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#home" class="nav__link is-active">Home</a>
+        <a href="#gallery" class="nav__link">Gallery</a>
+        <a href="#rates" class="nav__link">Rates</a>
+        <a href="#track" class="nav__link">Track</a>
+      </nav>
+      <a href="#book" class="btn btn--primary nav__cta">Book Now</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============================================================ HERO -->
+    <section class="hero" id="home">
+      <div class="hero__slides" id="heroSlides" aria-hidden="true"></div>
+      <div class="hero__shade"></div>
+
+      <div class="container hero__inner">
+        <div class="hero__copy">
+          <span class="eyebrow eyebrow--light reveal" style="--i:0">Jeli, Kelantan</span>
+          <h1 class="display hero__title reveal" style="--i:1" id="heroTitle">Sleep above the rainforest</h1>
+          <p class="hero__lead reveal" style="--i:2" id="heroTagline">A timber cabin wrapped in rainforest</p>
+          <div class="hero__actions reveal" style="--i:3">
+            <a href="#book" class="btn btn--primary btn--lg">Book your stay</a>
+            <a href="#gallery" class="btn btn--light btn--lg">View gallery</a>
+          </div>
+        </div>
+
+        <aside class="price-card glass reveal reveal--right" style="--i:3" aria-label="Rates summary">
+          <div class="price-card__top">
+            <span class="price-card__from">From</span>
+            <div class="price"><span id="priceFrom">RM 250</span> <small>/ night</small></div>
+          </div>
+          <ul class="price-card__facts">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 11h18M5 11V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4M3 11v8m18-8v8M3 15h18"/></svg>
+              <span><strong id="factBedrooms">3</strong> bedrooms</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14.5 20a4.5 4.5 0 0 1 7 0"/></svg>
+              <span>Up to <strong id="factGuests">6</strong> guests</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z"/></svg>
+              <span><strong>4.9</strong> guest rating</span>
+            </li>
+          </ul>
+          <a href="#book" class="btn btn--wood btn--block">Check availability</a>
+          <p class="price-card__note">Pay by bank transfer. Confirmation within 24 hours.</p>
+        </aside>
+      </div>
+
+      <div class="hero__dots" id="heroDots" role="tablist" aria-label="Hero photos"></div>
+      <a href="#gallery" class="hero__scroll" aria-label="Scroll to gallery">
+        <span></span>
+      </a>
+    </section>
+
+    <!-- ============================================================ GALLERY -->
+    <section class="section gallery" id="gallery">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Gallery</span>
+          <h2 class="h2">Every corner, built from the forest</h2>
+          <p class="lead">Tap any photo to see it full screen.</p>
+        </div>
+        <div class="gallery__grid" id="galleryGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================ ABOUT -->
+    <section class="section about" id="about">
+      <div class="container about__inner">
+        <div class="about__copy reveal reveal--left">
+          <span class="eyebrow">The homestay</span>
+          <h2 class="h2" id="aboutTitle">Woody Forest Homestay</h2>
+          <p class="lead" id="aboutText"></p>
+          <p class="about__address muted" id="aboutAddress"></p>
+        </div>
+        <ul class="amenities reveal reveal--right" id="amenityList"></ul>
+      </div>
+    </section>
+
+    <!-- ============================================================ RATES -->
+    <section class="section rates" id="rates">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Rates &amp; availability</span>
+          <h2 class="h2">Pick your nights</h2>
+          <p class="lead">Whole house, private to you. Weekend and holiday nights are priced a little higher.</p>
+        </div>
+        <div class="rates__grid">
+          <div class="calendar card reveal" id="calendar"></div>
+          <div class="rate-card card card--pad reveal reveal--right" id="rateCard"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ BOOK -->
+    <section class="section book" id="book">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Book your stay</span>
+          <h2 class="h2">Reserve the cabin</h2>
+          <p class="lead">Choose your dates, transfer the total, upload the receipt. We confirm within 24 hours.</p>
+        </div>
+        <div class="book__grid" id="bookGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================ TRACK -->
+    <section class="section track" id="track">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Track booking</span>
+          <h2 class="h2">Where is my booking?</h2>
+          <p class="lead">Enter your reference code and the phone number you booked with.</p>
+        </div>
+        <div class="track__panel card card--pad reveal" id="trackPanel"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================ FOOTER -->
+  <footer class="footer" id="contact">
+    <div class="container footer__inner" id="footerInner"></div>
+  </footer>
+
+  <!-- ============================================================ MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav" id="bottomNav" aria-label="Mobile">
+    <a href="#home" class="bottom-nav__item is-active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="#gallery" class="bottom-nav__item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/></svg>
+      <span>Gallery</span>
+    </a>
+    <a href="#book" class="bottom-nav__item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4m8-4v4"/></svg>
+      <span>Book</span>
+    </a>
+    <a href="#track" class="bottom-nav__item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <span>Track</span>
+    </a>
+    <span class="bottom-nav__pill" id="bottomNavPill" aria-hidden="true"></span>
+  </nav>
+
+  <!-- ============================================================ LIGHTBOX -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox__close btn btn--icon btn--light" data-lightbox-close aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <button class="lightbox__nav lightbox__nav--prev" data-lightbox-prev aria-label="Previous photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 5-7 7 7 7"/></svg>
+    </button>
+    <figure class="lightbox__figure">
+      <img id="lightboxImg" src="" alt="">
+      <figcaption id="lightboxCaption"></figcaption>
+    </figure>
+    <button class="lightbox__nav lightbox__nav--next" data-lightbox-next aria-label="Next photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m9 5 7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <script src="js/ui.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/landing.js"></script>
+</body>
+</html>
